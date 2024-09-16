@@ -1,18 +1,10 @@
-import  dbConnect from "@/server/lib/mongodb";
+import login from "@/app/actions/server/user/login/route";
 import Page from "./content";
-export default async function Home() {
-  const connectDb = async() => {
-    await dbConnect();
-    return 'true';
-  }
-  
-  let connected = 'false'
-
-  // Connect to the database here
-  connected = await connectDb();
-
+import signupHandler from "./actions/server/user/signup/route";
+export default async function Handler () {
   return (
-    <Page connected={connected}/>
-  )
-
+      <Page 
+      action={signupHandler}/>
+    )
+  return (<p>Hellos</p>)
 }
