@@ -1,68 +1,44 @@
 "use server"
 
-import getModels from '@/app/actions/server/lib/models';
-import dbConnect from '@/app/actions/server/lib/mongodb';
-import getUsername from '@/app/actions/server/utils/getUsername';
-import fetch from 'node-fetch';
+import { ComputerVisionClient } from "@azure/cognitiveservices-computervision";
+import { ApiKeyCredentials } from "@azure/ms-rest-js";
+const sleep = require('util').promisify(setTimeout);
 
-const readDocumentHandler = async (documentName) => {
-  await dbConnect();
+const readDocumentHandler = async (imagesUrl) => {
+  const client = new ComputerVisionClient(
+    new ApiKeyCredentials(
+      { inHeader: {'Ocp-Apim-Subscription-Key': process.env.AZURE_API_KEY}}
+    ),
+    process.env.AZURE_API_ENDPOINT
+  )
 
-  const { User } = getModels();
+  const getText = async(url) => {
+    let result = await client.read(url);
+    let operation = result.operationLocation.split('/').slice(-1)[0];
 
-  const username = await getUsername();
-
-  // Find the user by username
-  const user = await User.findOne({ username });
-
-  if (!user) {
-    throw new Error(`User with username '${username}' not found.`);
-  }
-
-  // Find the specific document by name
-  const document = user.documents.find((doc) => doc.name === documentName);
-
-  if (!document) {
-    console.log(`Document '${documentName}' not found`);
-    return { message: `Document with name '${documentName}' not found.` };
-  }
-
-  const images = document.images;
-
-  // If there are no images, return an appropriate message
-  if (!images || images.length === 0) {
-    return { message: 'No images found in this document.', images: [] };
-  }
-
-  // Function to fetch image and convert to base64
-  const getBase64FromUrl = async (url) => {
-    try {
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString('base64');
-      const contentType = response.headers.get('content-type');
-      return `data:${contentType};base64,${base64}`;
-    } catch (error) {
-      console.error(`Failed to fetch image: ${url}`, error);
-      return null;
+    while (result.status !== "succeeded") { 
+      await sleep(1000); 
+      result = await client.getReadResult(operation); 
     }
-  };
 
-  // Fetch and convert all images to base64
-  const base64Images = await Promise.all(images.map(getBase64FromUrl));
+    const pages = result.analyzeResult.readResults;
 
-  // Filter out any null values (images that failed to fetch)
-  const finalImages = base64Images.filter(Boolean);
+    let text = '';
+    for (const page of pages) {
+      for (const line of page.lines) {
+        text += line.text + ' ';
+      }
+    }
 
-  console.log(finalImages, 'are the images')
+    return text;
+  }
 
-  return { 
-    message: 'Images retrieved and converted to base64 successfully.',
-    images: finalImages,
-    documentName: document.name,
-    // You can include other document properties here if needed
-  };
+  const textPromises = imagesUrl.map(url => getText(url));
+  const texts = await Promise.all(textPromises);
+
+  console.log('Texts are\n\n', texts);
+
+  return texts.join(' ');
 };
 
 export default readDocumentHandler;

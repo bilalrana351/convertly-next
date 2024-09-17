@@ -4,6 +4,7 @@ import getModels from '@/app/actions/server/lib/models'; // Ensure the correct p
 import dbConnect from '@/app/actions/server/lib/mongodb';
 import { cookies } from 'next/headers';
 import bcrypt from "bcrypt";
+import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken'
 
 const SALT_ROUNDS = 10; // Number of salt rounds for bcrypt
@@ -15,7 +16,7 @@ const signupHandler = async (username, password, confirmPassword) => {
 
     // Validate input
     if (password !== confirmPassword) {
-      throw new Error('Passwords do not match.');
+      return {message: 'Passwords do not match.'};
     }
 
     // Connect to the database
@@ -50,7 +51,7 @@ const signupHandler = async (username, password, confirmPassword) => {
 
     cookie.set('session-data',encrypted);
 
-    return { message: 'Signup successful.' };
+    redirect('/dashboard')
 };
 
 export default signupHandler;

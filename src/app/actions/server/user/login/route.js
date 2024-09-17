@@ -39,7 +39,7 @@ const loginHandler = async (username, password) => {
 
     // If login is successful, return a success message or generate a token
     // For simplicity, we're returning a success message here
-    return { message: 'Login successful.' };
+    redirect('/dashboard')
 };
 
 export default loginHandler;
