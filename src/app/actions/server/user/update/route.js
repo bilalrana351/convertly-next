@@ -1,16 +1,22 @@
 "use server"
 
-// import getModels from '@/server/models'; // Ensure the correct path to the models file
-import getModels from '../../lib/models';
+import getModels from '@/app/actions/server/lib/models';
 import dbConnect from '@/app/actions/server/lib/mongodb';
 import bcrypt from 'bcrypt';
-import { redirect } from 'next/dist/server/api-utils';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import getUsername from '../../utils/getUsername';
+
+const jwt = require('jsonwebtoken');
 
 const SALT_ROUNDS = 10; // Number of salt rounds for bcrypt
 
-const updateUsernameHandler = async (username, password) => {
+const updatePasswordHandler = async (currentPassword, newPassword, confirmNewPassword) => {
     const { User } = getModels();
-  
+    const cookie = cookies();
+
+    const username = await getUsername();
+
     // Connect to the database
     await dbConnect();
 
@@ -18,30 +24,41 @@ const updateUsernameHandler = async (username, password) => {
     const user = await User.findOne({ username });
 
     if (!user) {
-      redirect('/login')
-      return;
+        return { message: 'User not found.' };
     }
 
-    // Compare the provided password with the hashed password in the database
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Validate input
+    if (newPassword !== confirmNewPassword) {
+        return { message: 'New passwords do not match.' };
+    }
+
+    // Compare the provided current password with the hashed password in the database
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
-      return { message: 'The passwords do not match' }
+        return { message: 'Current password is incorrect.' };
     }
 
-    // Check if the new username already exists
-    const existingUser = await User.findOne({ username: username });
+    // Hash the new password
+    const hashedNewPassword = bcrypt.hashSync(newPassword, SALT_ROUNDS);
 
-    if (existingUser) {
-      return { message: 'New username already exists.' };
-    }
-
-    // Update the username
-    user.username = username;
+    // Update the password
+    user.password = hashedNewPassword;
 
     await user.save();
 
-    return { message: 'Username and password updated successfully.' };
+    const encrypted = jwt.sign(
+        {
+            username: username,
+            password: newPassword
+        },
+        process.env.JWT_SECRET_KEY,
+        { expiresIn: '1h' }
+    );
+
+    cookie.set('session-data', encrypted);
+
+    redirect('/dashboard');
 };
 
-export default errorHandler(updateUsernameHandler);
+export default updatePasswordHandler;

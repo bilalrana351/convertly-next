@@ -1,9 +1,14 @@
 'use server'
 
 import mongoose from "mongoose";
+
 // Document Schema
 const DocumentSchema = new mongoose.Schema({
   name: {
+    type: String,
+    required: true
+  },
+  description: {
     type: String,
     required: true
   },
@@ -35,7 +40,7 @@ const UserSchema = new mongoose.Schema({
   documents: {
     type: [DocumentSchema],
     default: [],
-  },
+  }
 });
 
 // Use a function to create and cache models

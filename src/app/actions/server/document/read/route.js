@@ -5,6 +5,9 @@ import { ApiKeyCredentials } from "@azure/ms-rest-js";
 const sleep = require('util').promisify(setTimeout);
 
 const readDocumentHandler = async (imagesUrl) => {
+  console.log('Data is', imagesUrl)
+
+
   const client = new ComputerVisionClient(
     new ApiKeyCredentials(
       { inHeader: {'Ocp-Apim-Subscription-Key': process.env.AZURE_API_KEY}}
@@ -37,6 +40,8 @@ const readDocumentHandler = async (imagesUrl) => {
   const texts = await Promise.all(textPromises);
 
   console.log('Texts are\n\n', texts);
+
+  console.log(texts);
 
   return texts.join(' ');
 };

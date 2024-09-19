@@ -8,6 +8,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 // Function to delete a user from the database
 const deleteUserHandler = async () => {
+
+    console.log('called');
     const { User } = getModels();
 
     const username = await getUsername();
@@ -27,6 +29,8 @@ const deleteUserHandler = async () => {
     if (result.deletedCount === 0) {
       redirect('/signup')      
     }
+
+    redirect('/signup')
 };
 
 export default deleteUserHandler;

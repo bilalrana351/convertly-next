@@ -18,6 +18,7 @@ const getChain = async () => {
         SystemMessagePromptTemplate.fromTemplate(`
             You are a helpful assistant that answers the question asked by the user based on the provided piece of context.
             In case the answer is not in the provided context, you reply with 'I don't know the answer'.
+            However, you should respond to greetings of the user.
             Do not give answers by yourself, use the provided piece of context.
             
             The context is:

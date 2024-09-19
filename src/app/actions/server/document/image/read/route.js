@@ -22,7 +22,7 @@ const readImagesHandler = async (documentName) => {
   // Find the specific document by name
   const document = user.documents.find((doc) => doc.name === documentName);
 
-  if (!document) {
+  if (!document) { 
     console.log(`Document '${documentName}' not found`);
     return { message: `Document with name '${documentName}' not found.` };
   }
@@ -55,11 +55,22 @@ const readImagesHandler = async (documentName) => {
   // Filter out any null values (images that failed to fetch)
   const finalImages = base64Images.filter(Boolean);
 
-  console.log(finalImages, 'are the images')
+  const combinedImages = []
+
+  for (let i = 0; i < finalImages.length; i++){
+    combinedImages.push(
+      {
+        image: finalImages[i],
+        url: images[i]
+      }
+    )
+  }
+
+  console.log('Combined images are', combinedImages)
 
   return { 
     message: 'Images retrieved and converted to base64 successfully.',
-    images: finalImages,
+    images: combinedImages,
     documentName: document.name,
     // You can include other document properties here if needed
   };

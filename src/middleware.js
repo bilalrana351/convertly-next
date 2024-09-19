@@ -1,36 +1,45 @@
-// import { cookies } from "next/headers";
-// import { NextResponse } from "next/server";
-// import dbConnect from "@/app/actions/server/lib/mongodb";
-// import getModels from '@/app/actions/server/lib/models';
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { PrismaClient } from '@prisma/client/edge';
+import { decode } from "jsonwebtoken";
 
-// export async function middleware(req) {
-//     const sessionData = cookies().get('session-data')?.value;
-//     console.log(sessionData);
-//     if (!sessionData) {
-//         return NextResponse.redirect(new URL('/signup', req.nextUrl));
-//     }
+const prisma = new PrismaClient();
 
-//     const username = JSON.parse(sessionData).username;
+export async function middleware(req) {
+    // Allow the index page to pass through without authentication
+    if (req.nextUrl.pathname === '/') {
+        return NextResponse.next();
+    }
 
-//     await dbConnect();
+    const sessionData = cookies().get('session-data')?.value;
 
-//     const { User } = getModels();
+    console.log(sessionData);
 
-//     const user = await User.findOne({ username });
+    if (!sessionData) {
+        return NextResponse.redirect(new URL('/signup', req.nextUrl));
+    }
 
-//     if (!user) {
-//         return NextResponse.redirect(new URL('/login', req.nextUrl));
-//     }
+    const username = decode(sessionData).username;
 
-//     return NextResponse.next();
-// }
+    try {
+        const user = await prisma.user.findUnique({
+            where: { username: username },
+        });
 
-// export const config = {
-//     matcher: [
-//         '/((?!api|_next/static|_next/image|favicon.ico|login|signup).*)',
-//     ]
-// };
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', req.nextUrl));
+        }
 
-export function middleware(req){
-    ;
+        return NextResponse.next();
+    } catch (error) {
+        console.error('Error connecting to database:', error);
+        return NextResponse.redirect(new URL('/error', req.nextUrl));
+    }
 }
+
+export const config = {
+    matcher: [
+        '/((?!api|_next/static|_next/image|favicon.ico|login|signup|images).*)',
+    ],
+    runtime: 'edge',
+};

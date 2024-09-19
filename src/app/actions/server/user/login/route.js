@@ -16,16 +16,14 @@ const loginHandler = async (username, password) => {
     const user = await User.findOne({ username });
 
     if (!user) {
-
       return { message: "User not found" }
-
     }
 
     // Compare the provided password with the hashed password in the database
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return { message: "Passwords do not match" }
+      return { message: "Wrong password" }
     }
 
     const encrypted = jwt.sign({

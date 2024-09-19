@@ -30,17 +30,24 @@ const askChatHandler = async (documentName, question) => {
     const contexts = await store.similaritySearch(question, 2);
 
 
+    console.log(contexts,'is the context')
+
     let concatContext = ''
 
     for (const context of contexts){
       console.log('Context is', context);
       concatContext += context.pageContent + '\n';
     }
+
     console.log('The context is', concatContext);
 
     const ragChain = await getChain();
 
     let text = (await ragChain.invoke({context: concatContext, question: question})).content;
+
+    console.log(typeof text);
+
+    console.log('The content is\n\n', text)
 
     return text;
 }
