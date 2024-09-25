@@ -15,8 +15,6 @@ import Link from 'next/link';
 import { protect } from '@/lib/protection';
 
 export default function DocumentViewer() {
-  protect();
-
   const searchParams = useSearchParams();
   const documentName = searchParams.get('name');
   const [description, setDescription] = useState('');
@@ -28,6 +26,7 @@ export default function DocumentViewer() {
   useEffect(() => {
     if (documentName) {
       fetchDocumentDetails();
+      protect();
     }
   }, [documentName]);
 

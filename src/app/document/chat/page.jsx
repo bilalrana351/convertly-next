@@ -11,7 +11,6 @@ import getChatHistoryHandler from "@/app/actions/server/document/chat/history/ge
 import { useSearchParams } from "next/navigation"
 import { protect } from "@/lib/protection"
 export default function Chatbot() {
-  protect();
   const documentName = useSearchParams().get('name');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -22,6 +21,7 @@ export default function Chatbot() {
        
 
   const fetchHistory = useCallback(async () => {
+      protect();
       const history = await getChatHistoryHandler(documentName);
       setMessages(history.chatHistory);
   }, [documentName]);

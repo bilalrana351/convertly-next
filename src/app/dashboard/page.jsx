@@ -34,6 +34,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    protect();
     fetchDocuments();
   }, [showNewDocumentForm]);
 
