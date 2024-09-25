@@ -6,8 +6,10 @@ import DashboardCard from "@/components/dashboard-card";
 import getDocumentsHandler from "../actions/server/user/get/documents/route";
 import createDocumentHandler from "@/app/actions/server/document/create/route";
 import { NewDocument } from "./new-document-form";
-
+import { protect } from "@/lib/protection";
 export default function Dashboard() {
+  protect();
+
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);

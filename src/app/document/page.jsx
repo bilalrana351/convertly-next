@@ -12,7 +12,11 @@ import deleteImageHandler from '../actions/server/document/image/delete/route';
 import readDocumentHandler from '../actions/server/document/read/route';
 import embedTextHandler from '../actions/server/document/text/embed/route';
 import Link from 'next/link';
+import { protect } from '@/lib/protection';
+
 export default function DocumentViewer() {
+  protect();
+
   const searchParams = useSearchParams();
   const documentName = searchParams.get('name');
   const [description, setDescription] = useState('');

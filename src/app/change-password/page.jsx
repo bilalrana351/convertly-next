@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import updatePasswordHandler from "@/app/actions/server/user/update/route"
+import { protect } from "@/lib/protection"
 
 export default function ChangePasswordPage() {
+
+  protect();
+  
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")

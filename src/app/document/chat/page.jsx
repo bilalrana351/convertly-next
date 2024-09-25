@@ -9,8 +9,9 @@ import askChatHandler from "@/app/actions/server/document/chat/ask/route"
 import saveChatHistoryHandler from "@/app/actions/server/document/chat/history/save/route"
 import getChatHistoryHandler from "@/app/actions/server/document/chat/history/get/route"
 import { useSearchParams } from "next/navigation"
-
+import { protect } from "@/lib/protection"
 export default function Chatbot() {
+  protect();
   const documentName = useSearchParams().get('name');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
