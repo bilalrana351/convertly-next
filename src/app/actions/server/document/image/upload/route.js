@@ -22,10 +22,10 @@ const uploadToCloudinary = async (base64Image) => {
       else resolve(result.secure_url);
     });
   });
-};
+  };
 
-// Function to upload base64 images to Cloudinary and store URLs in MongoDB
-const uploadImageHandler = async (documentName, base64Images) => {
+  // Function to upload base64 images to Cloudinary and store URLs in MongoDB
+  const uploadImageHandler = async (documentName, base64Images) => {
   const { User } = getModels();
 
   // Get the username from cookies

@@ -53,6 +53,7 @@ export default function DocumentViewer() {
   };
 
   const handleImageUpload = async (event) => {
+    console.log('Called')
     const embedData = async (urls) => {
 
       console.log('Urls coming in', urls)
@@ -78,6 +79,8 @@ export default function DocumentViewer() {
 
     try {
       const data = await uploadImageHandler(documentName, base64Images);
+      
+      console.log(data)
 
       console.log(data.urls)
 

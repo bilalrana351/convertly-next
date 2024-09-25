@@ -1,9 +1,10 @@
+"use server"
+
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
 import dbConnect from "@/app/actions/server/lib/mongodb";
 import getModels from '@/app/actions/server/lib/models';
 import { redirect } from "next/navigation";
-
+import decode from "jsonwebtoken/decode";
 export async function protect() {
     const sessionData = cookies().get('session-data')?.value;
     console.log(sessionData);
@@ -11,7 +12,7 @@ export async function protect() {
         redirect('/signup');
     }
 
-    const username = JSON.parse(sessionData).username;
+    const username = decode(sessionData).username
 
     await dbConnect();
 
@@ -22,6 +23,4 @@ export async function protect() {
     if (!user) {
         redirect('/login');
     }
-
-    return NextResponse.next();
 }
