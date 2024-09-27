@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation"
 import { protect } from "@/lib/protection"
 import { Suspense } from "react"
 
-const Chatbot = () => {
+export default function Chatbot() {
   const documentName = useSearchParams().get('name');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -115,16 +115,6 @@ const Chatbot = () => {
     </Suspense>
   );
 }
-
-export default function DocumentChatViewer() {
-    return (
-      <div className="flex flex-col gap-8 p-6 md:p-10">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Chatbot />
-        </Suspense>
-      </div>
-    );
-  }
 
 function SendIcon(props) {
   return (
