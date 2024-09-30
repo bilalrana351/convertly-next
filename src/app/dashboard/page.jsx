@@ -1,58 +1,63 @@
 'use client'
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import DashboardCard from "@/components/dashboard-card";
-import getDocumentsHandler from "../actions/server/user/get/documents/route";
-import createDocumentHandler from "@/app/actions/server/document/create/route";
-import { NewDocument } from "./new-document-form";
-import { protect } from "@/lib/protection";
+import React, { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import DashboardCard from "@/components/dashboard-card"
+import getDocumentsHandler from "../actions/server/user/get/documents/route"
+import createDocumentHandler from "@/app/actions/server/document/create/route"
+import { NewDocument } from "./new-document-form"
+import { protect } from "@/lib/protection"
+import LoadingPage from "../loading"
+// Import the loading page component
 
 export default function Dashboard() {
-  const [documents, setDocuments] = useState([]);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showNewDocumentForm, setShowNewDocumentForm] = useState(false);
+  const [documents, setDocuments] = useState([])
+  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showNewDocumentForm, setShowNewDocumentForm] = useState(false)
 
   const fetchDocuments = async () => {
-    setIsLoading(true);
-
-    // const result = await getDocumentsHandler();
-    const result = await getDocumentsHandler();
-    
-    console.log(result)
-
-    console.log('returned', result);
-    if (!result) {
-      setError("Failed to fetch documents");
-    } else if (result.error) {
-      setError(result.error);
-    } else if (result.documents) {
-      setDocuments(result.documents);
+    setIsLoading(true)
+    try {
+      const result = await getDocumentsHandler()
+      
+      if (!result) {
+        setError("Failed to fetch documents")
+      } else if (result.error) {
+        setError(result.error)
+      } else if (result.documents) {
+        setDocuments(result.documents)
+      }
+    } catch (err) {
+      setError("An error occurred while fetching documents")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    protect();
-    fetchDocuments();
-  }, [showNewDocumentForm]);
+    protect()
+    fetchDocuments()
+  }, [])
 
   const handleCreateDocument = async (name, description) => {
-    try{
-      const result = await createDocumentHandler(name, description);
+    try {
+      const result = await createDocumentHandler(name, description)
 
       if (result.message === 'New document created successfully.') {
-        setShowNewDocumentForm(false);
-        fetchDocuments(); // Refresh the documents list
+        setShowNewDocumentForm(false)
+        fetchDocuments() // Refresh the documents list
       } else {
-        setError(result.message);
+        setError(result.message)
       }
+    } catch (err) {
+      setError("An error occurred while creating the document")
     }
-    catch(err){
-      setShowNewDocumentForm(false);
-      fetchDocuments();
-    }
-  };
+  }
+
+  if (isLoading) {
+    return <LoadingPage />
+  }
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -87,5 +92,5 @@ export default function Dashboard() {
         )}
       </main>
     </div>
-  );
+  )
 }

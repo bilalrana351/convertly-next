@@ -58,7 +58,8 @@ const updatePasswordHandler = async (currentPassword, newPassword, confirmNewPas
 
     cookie.set('session-data', encrypted);
 
-    redirect('/dashboard');
+    return {message: 'success'}
+
 };
 
 export default updatePasswordHandler;

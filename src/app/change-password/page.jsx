@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Loader2 } from "lucide-react"
 import updatePasswordHandler from "@/app/actions/server/user/update/route"
 import { protect } from "@/lib/protection"
 
@@ -14,31 +14,40 @@ export default function ChangePasswordPage() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
-  const router = useRouter()
+  const [successMessage, setSuccessMessage] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    protect();
+  }, []);
 
   const handlePasswordUpdate = async (e) => {
     e.preventDefault()
     setErrorMessage("")
-
-    useEffect(() => {
-        protect();
-    }, []);
+    setSuccessMessage("")
 
     if (newPassword !== confirmNewPassword) {
       setErrorMessage("New passwords do not match.")
       return
     }
 
+    setLoading(true)
+
     try {
       const result = await updatePasswordHandler(currentPassword, newPassword, confirmNewPassword)
-      if (result.message) {
+      if (result.message !== 'success') {
         setErrorMessage(result.message)
       } else {
-        // Password updated successfully, redirect to dashboard
-        router.push("/dashboard")
+        setSuccessMessage("Password changed successfully!")
+        // Clear the form fields
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmNewPassword("")
       }
     } catch (error) {
       setErrorMessage("An error occurred while updating the password.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -82,10 +91,17 @@ export default function ChangePasswordPage() {
                   required
                 />
               </div>
-              {errorMessage && <div className="text-red-500 text-sm">{errorMessage}</div>}
+              {errorMessage && <div className="text-red-500 text-sm" role="alert">{errorMessage}</div>}
+              {successMessage && <div className="text-green-500 text-sm" role="alert">{successMessage}</div>}
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="ml-auto">Update Password</Button>
+              <Button type="submit" className="ml-auto" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "Update Password"
+                )}
+              </Button>
             </CardFooter>
           </form>
         </Card>

@@ -1,4 +1,3 @@
-// Client page file 
 'use client'
 
 import { useState } from "react"
@@ -8,20 +7,23 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import signupHandler from '@/app/actions/server/user/signup/route'  // Adjust this import path as needed
+import { Loader2 } from "lucide-react"
 
 export default function Component() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)  // State for loading
 
   const handlesignup = async (e) => {
     e.preventDefault()
     setError("")
-    console.log(confirmPassword)
+    setLoading(true)  // Start the loader
+
     try {
       const result = await signupHandler(username, password, confirmPassword)
-      
+
       if (result && result.message) {
         // If there's a message, it means there was an error
         setError(result.message)
@@ -30,6 +32,8 @@ export default function Component() {
     } catch (error) {
       console.error('Error during signup:', error)
       setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setLoading(false)  // Stop the loader
     }
   }
 
@@ -84,7 +88,13 @@ export default function Component() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="ml-auto">Signup</Button>
+              <Button type="submit" className="ml-auto" disabled={loading}>  {/* Disable button while loading */}
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />  // Show loader when loading
+                ) : (
+                  "Signup"
+                )}
+              </Button>
             </CardFooter>
           </form>
         </Card>

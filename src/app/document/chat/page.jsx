@@ -11,21 +11,30 @@ import getChatHistoryHandler from "@/app/actions/server/document/chat/history/ge
 import { useSearchParams } from "next/navigation"
 import { protect } from "@/lib/protection"
 import { Suspense } from "react"
+import LoadingPage from "@/app/loading"
 
 const Chatbot = () => {
   const documentName = useSearchParams().get('name');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
 
   const handleInputChange = (event) => {
     setInputText(event.target.value);
   };
 
-
   const fetchHistory = useCallback(async () => {
     protect();
-    const history = await getChatHistoryHandler(documentName);
-    setMessages(history.chatHistory);
+    setIsLoading(true);
+    try {
+      const history = await getChatHistoryHandler(documentName);
+      setMessages(history.chatHistory);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [documentName]);
 
   useEffect(() => {
@@ -33,8 +42,9 @@ const Chatbot = () => {
   }, [fetchHistory]);
 
   const handleSendMessage = async () => {
-    if (inputText.trim() === "") return;
+    if (inputText.trim() === "" || isSending) return;
 
+    setIsSending(true);
     const newHumanMessage = ['human', inputText];
 
     setMessages(prevMessages => [...prevMessages, newHumanMessage]);
@@ -54,77 +64,82 @@ const Chatbot = () => {
         ...prevMessages,
         ['ai', `Sorry, there was a problem on our end, could you please resend that? ${err}`]
       ]);
+    } finally {
+      setIsSending(false);
     }
   };
 
+  if (isLoading) {
+    return <LoadingPage />;
+  }
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
-        <main className="flex-1 flex flex-col gap-8 p-6 md:p-10">
-          <div className="bg-card rounded-lg shadow-md p-6 md:p-10">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold">Document Analysis Chatbot</h1>
-                <p className="text-muted-foreground">Discuss the details of your documents</p>
-              </div>
-              <Link
-                href={{
-                  pathname: "/document",
-                  query: { name: documentName }
-                }}
-                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                prefetch={false}>
-                Back to Documents
-              </Link>
+    <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
+      <main className="flex-1 flex flex-col gap-8 p-6 md:p-10">
+        <div className="bg-card rounded-lg shadow-md p-6 md:p-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold">Document Analysis Chatbot</h1>
+              <p className="text-muted-foreground">Discuss the details of your documents</p>
             </div>
-            <div className="grid gap-4">
-              {messages.map((message, index) => (
+            <Link
+              href={{
+                pathname: "/document",
+                query: { name: documentName }
+              }}
+              className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              prefetch={false}>
+              Back to Documents
+            </Link>
+          </div>
+          <div className="grid gap-4">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex items-start gap-4 ${message[0] === "ai" ? "flex-row" : "flex-row-reverse"}`}>
+                <Avatar>
+                  <AvatarImage src="/placeholder-user.jpg" alt={message[0]} />
+                  <AvatarFallback>{message[0] === "ai" ? "CB" : "U"}</AvatarFallback>
+                </Avatar>
                 <div
-                  key={index}
-                  className={`flex items-start gap-4 ${message[0] === "ai" ? "flex-row" : "flex-row-reverse"}`}>
-                  <Avatar>
-                    <AvatarImage src="/placeholder-user.jpg" alt={message[0]} />
-                    <AvatarFallback>{message[0] === "ai" ? "CB" : "U"}</AvatarFallback>
-                  </Avatar>
-                  <div
-                    className={`flex-1 bg-muted rounded-lg p-4 ${message[0] === "ai" ? "bg-primary text-primary-foreground" : ""
-                      }`}>
-                    <p>{message[1]}</p>
-                  </div>
+                  className={`flex-1 bg-muted rounded-lg p-4 ${message[0] === "ai" ? "bg-primary text-primary-foreground" : ""
+                    }`}>
+                  <p>{message[1]}</p>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4">
-              <div className="relative">
-                <Textarea
-                  value={inputText}
-                  onChange={handleInputChange}
-                  placeholder="Type your message..."
-                  className="w-full rounded-lg border border-input bg-background p-3 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                <Button
-                  type="button"
-                  onClick={handleSendMessage}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                  <SendIcon className="h-5 w-5" />
-                </Button>
               </div>
+            ))}
+          </div>
+          <div className="mt-4">
+            <div className="relative">
+              <Textarea
+                value={inputText}
+                onChange={handleInputChange}
+                placeholder="Type your message..."
+                className="w-full rounded-lg border border-input bg-background p-3 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+              <Button
+                type="button"
+                onClick={handleSendMessage}
+                disabled={isSending}
+                className="absolute top-1/2 right-3 -translate-y-1/2 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                {isSending ? <SpinnerIcon className="h-5 w-5 animate-spin" /> : <SendIcon className="h-5 w-5" />}
+              </Button>
             </div>
           </div>
-        </main>
-      </div>
-    </Suspense>
+        </div>
+      </main>
+    </div>
   );
 }
 
 export default function DocumentChatViewer() {
-    return (
-      <div className="flex flex-col gap-8 p-6 md:p-10">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Chatbot />
-        </Suspense>
-      </div>
-    );
-  }
+  return (
+    <div className="flex flex-col gap-8 p-6 md:p-10">
+      <Suspense fallback={<LoadingPage />}>
+        <Chatbot />
+      </Suspense>
+    </div>
+  );
+}
 
 function SendIcon(props) {
   return (
@@ -141,6 +156,24 @@ function SendIcon(props) {
       strokeLinejoin="round">
       <path d="m22 2-7 20-4-9-9-4Z" />
       <path d="M22 2 11 13" />
+    </svg>
+  );
+}
+
+function SpinnerIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
     </svg>
   );
 }

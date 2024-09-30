@@ -6,16 +6,19 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"  // Import Loader2 for the spinner
 import loginHandler from '@/app/actions/server/user/login/route'  // Adjust this import path as needed
 
 export default function Component() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)  // State for loading
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
+    setLoading(true)  // Start the loader
 
     try {
       const result = await loginHandler(username, password)
@@ -28,6 +31,8 @@ export default function Component() {
     } catch (error) {
       console.error('Error during login:', error)
       setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setLoading(false)  // Stop the loader
     }
   }
 
@@ -71,7 +76,13 @@ export default function Component() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="ml-auto">Login</Button>
+              <Button type="submit" className="ml-auto" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />  // Show loader when loading
+                ) : (
+                  "Login"
+                )}
+              </Button>
             </CardFooter>
           </form>
         </Card>
